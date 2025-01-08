@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jackett.fullname" . }}
+  labels:
+    {{- include "jackett.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "jackett.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "jackett.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "jackett.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+
+      {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+      {{- end }}
+
+      {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+      {{- end }}
+
+      {{- with .Values.env }}
+          env:
+          {{- toYaml . | nindent 12 }}
+      {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - name: "jackett-storage"
+              subPath: "config"
+              mountPath: "/config"
+            - name: "jackett-storage"
+              subPath: "blackhole"
+              mountPath: "/downloads"
+
+
+
+      {{- if .Values.gluetun.enabled }}
+        - name: "gluetun"
+          image: {{ .Values.gluetun.image }}
+          tag: {{ .Values.gluetun.tag }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add: [ "NET_ADMIN" ]
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: {{ .Values.gluetun.vpn_service_provider }}
+            - name: VPN_TYPE
+              value: {{ .Values.gluetun.vpn_type }}
+
+        {{- if eq .Values.gluetun.vpn_type "wireguard" }}
+            - name: WIREGUARD_ADDRESSES
+              value: {{ .Values.gluetun.wireguard_addresses }}
+          {{- if .Values.gluetun.wireguard_secret }}
+            - name: WIREGUARD_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gluetun.wireguard_secret }}
+                  key: wgprivatekey
+          {{- else if .Values.gluetun.wireguard_key }}
+            - name: WIREGUARD_PRIVATE_KEY
+              value: {{ .Values.gluetun.wireguard_key }}
+          {{- end }}
+        {{- else if eq .Values.gluetun.vpn_type "openvpn" }}
+          {{- if  .Values.gluetun.openvpn_secret }}
+            - name: OPENVPN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gluetun.openvpn_secret }}
+                  key: openvpnuser
+                  optional: true
+            - name: OPENVPN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gluetun.openvpn_secret }}
+                  key: openvpnpasswd
+                  optional: true
+          {{- else if .Values.gluetun.openvpn_user }}
+            - name: OPENVPN_USER
+              value: {{ quote .Values.gluetun.openvpn_user }}
+            - name: OPENVPN_PASSWORD
+              value: {{ quote .Values.gluetun.openvpn_password }}
+          {{- end }}
+            - name: DNS_ADDRESS
+              value: {{ .Values.gluetun.dnsAddress }}
+        {{- end }}
+
+        {{- with .Values.gluetun.provider_extra_env }}
+        {{- toYaml . | nindent 12 }}
+        {{- end }}
+      {{- end }}
+
+      volumes:
+      {{- if .Values.persistence.enabled}}
+        {{- if .Values.persistence.existingClaim }}
+        - name: "jackett-storage"
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+        {{- else }}
+        - name: "jackett-storage"
+          persistentVolumeClaim:
+            claimName:  {{ include "jackett.fullname" . }}-config
+        {{- end }}
+      
+      {{- else }}
+        - name: "jackett-storage"
+          emptyDir: { }
+      {{- end }}
+
+      {{- if .Values.extraVolumes }}
+      {{ toYaml .Values.extraVolumes | nindent 8}}
+      {{- end }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

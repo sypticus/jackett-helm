@@ -27,34 +27,34 @@ gluetun:
   enabled: false
   image:  "ghcr.io/qdm12/gluetun"
   tag: "v3.40.0"
-  #vpn_service_provider: "mullvad"
-  #vpn_type: "wireguard" #wireguard or openvpn
-  #openvpn_user: ""    #Many VPNs, such as Mullvad, just require your secret account number in the user field.
-  #openvpn_password: ""
-  #openvpn_secret: "" #K8s Secret containing openvpn creds, stored with keys `openvpnuser` and `openvpnpasswd`
-  #wireguard_key: ""
-  #wireguard_secret: "" #K8s Secret containing wireguard key, stored with keys `wgprivatekey`
-  #wireguard_addresses: ""
-  #dns_address: "10.64.0.1"
-  #provider_extra_env:      #any other env params needed for VPN provider. See documentation https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers
-  #  - name: SERVER_CITIES
-  #    value: "Amsterdam"
+  vpnServiceProvider: "mullvad"
+  vpnType: "openvpn" #wireguard or openvpn
+  #openvpnUser: ""    #Many VPNs, such as Mullvad, just require your secret account number in the user field.
+  #openvpnPassword: ""
+  #openvpnSecret: "" #K8s Secret containing openvpn creds, stored with keys `openvpnuser` and `openvpnpasswd`
+  #wireguardKey: ""
+  #wireguardSecret: "" #K8s Secret containing wireguard key, stored with keys `wgprivatekey`
+  #wireguardAddresses: ""
+  dnsAddress: "10.64.0.1"
+  providerParams:      #any other env params needed for VPN provider. See documentation https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers
+ #   - name: SERVER_CITIES
+ #     value: "Amsterdam"
 
 
 service:
   type: ClusterIP
   port: 9117
+#  loadBalancerIP:
 
-
-extraParams: #Additional Params used by Jackett. See https://hub.docker.com/r/linuxserver/jackett/
-  - name: PUID
-    value: "1000"
-  - name: PGID
-    value: "1000"
-  - name: TZ
-    value: "Etc/UTC"
-  - name: AUTO_UPDATE
-    value: "true"
+extraParams: [] #Additional Params used by Jackett. See https://hub.docker.com/r/linuxserver/jackett/
+#  - name: PUID
+#    value: "1000"
+#  - name: PGID
+#    value: "1000"
+#  - name: TZ
+#    value: "Etc/UTC"
+#  - name: AUTO_UPDATE
+#    value: "true"
 
 
 livenessProbe:

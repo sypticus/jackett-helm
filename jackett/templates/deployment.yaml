@@ -52,7 +52,7 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
       {{- end }}
 
-      {{- with .Values.env }}
+      {{- with .Values.extraParams }}
           env:
           {{- toYaml . | nindent 12 }}
       {{- end }}
@@ -79,48 +79,48 @@ spec:
               add: [ "NET_ADMIN" ]
           env:
             - name: VPN_SERVICE_PROVIDER
-              value: {{ .Values.gluetun.vpn_service_provider }}
+              value: {{ .Values.gluetun.vpnServiceProvider }}
             - name: VPN_TYPE
-              value: {{ .Values.gluetun.vpn_type }}
+              value: {{ .Values.gluetun.vpnType }}
 
-        {{- if eq .Values.gluetun.vpn_type "wireguard" }}
+        {{- if eq .Values.gluetun.vpnType "wireguard" }}
             - name: WIREGUARD_ADDRESSES
-              value: {{ .Values.gluetun.wireguard_addresses }}
-          {{- if .Values.gluetun.wireguard_secret }}
+              value: {{ .Values.gluetun.wireguardAddresses }}
+          {{- if .Values.gluetun.wireguardSecret }}
             - name: WIREGUARD_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.gluetun.wireguard_secret }}
+                  name: {{ .Values.gluetun.wireguardSecret }}
                   key: wgprivatekey
-          {{- else if .Values.gluetun.wireguard_key }}
+          {{- else if .Values.gluetun.wireguardKey }}
             - name: WIREGUARD_PRIVATE_KEY
-              value: {{ .Values.gluetun.wireguard_key }}
+              value: {{ .Values.gluetun.wireguardKey }}
           {{- end }}
-        {{- else if eq .Values.gluetun.vpn_type "openvpn" }}
-          {{- if  .Values.gluetun.openvpn_secret }}
+        {{- else if eq .Values.gluetun.vpnType "openvpn" }}
+          {{- if  .Values.gluetun.openvpnSecret }}
             - name: OPENVPN_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.gluetun.openvpn_secret }}
+                  name: {{ .Values.gluetun.openvpnSecret }}
                   key: openvpnuser
                   optional: true
             - name: OPENVPN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.gluetun.openvpn_secret }}
+                  name: {{ .Values.gluetun.openvpnSecret }}
                   key: openvpnpasswd
                   optional: true
-          {{- else if .Values.gluetun.openvpn_user }}
+          {{- else if .Values.gluetun.openvpnUser }}
             - name: OPENVPN_USER
-              value: {{ quote .Values.gluetun.openvpn_user }}
+              value: {{ quote .Values.gluetun.openvpnUser }}
             - name: OPENVPN_PASSWORD
-              value: {{ quote .Values.gluetun.openvpn_password }}
+              value: {{ quote .Values.gluetun.openvpnPassword }}
           {{- end }}
             - name: DNS_ADDRESS
               value: {{ .Values.gluetun.dnsAddress }}
         {{- end }}
 
-        {{- with .Values.gluetun.provider_extra_env }}
+        {{- with .Values.gluetun.extraParams }}
         {{- toYaml . | nindent 12 }}
         {{- end }}
       {{- end }}

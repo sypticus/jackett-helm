@@ -8,7 +8,7 @@ https://github.com/sypticus/jackett-helm.git
 
 ```console
 git clone https://github.com/sypticus/jackett-helm.git
-helm install jackett ./jackett-helm/jackett -n torrent --create-namespace`
+helm install jackett ./jackett-helm/jackett -n torrent --create-namespace
 ```
 
 You should then be able to access the dashboard.

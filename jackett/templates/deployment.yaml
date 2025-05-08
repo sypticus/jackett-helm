@@ -71,8 +71,7 @@ spec:
 
       {{- if .Values.gluetun.enabled }}
         - name: "gluetun"
-          image: {{ .Values.gluetun.image }}
-          tag: {{ .Values.gluetun.tag }}
+          image: {{ .Values.gluetun.image }}:{{ .Values.gluetun.tag }}
           imagePullPolicy: IfNotPresent
           securityContext:
             capabilities:
@@ -116,11 +115,12 @@ spec:
             - name: OPENVPN_PASSWORD
               value: {{ quote .Values.gluetun.openvpnPassword }}
           {{- end }}
+        {{- end }}
+       
             - name: DNS_ADDRESS
               value: {{ .Values.gluetun.dnsAddress }}
-        {{- end }}
 
-        {{- with .Values.gluetun.extraParams }}
+        {{- with .Values.gluetun.providerParams }}
         {{- toYaml . | nindent 12 }}
         {{- end }}
       {{- end }}
